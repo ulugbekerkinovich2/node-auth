@@ -4,9 +4,13 @@ class Todo {
     #id;
     #name;
     #description;
-    constructor(name, description) {
-        this.#id = uuid();
-        this.#name = name;
-        this.#description = description;
+    #userId;
+    constructor(name,description,userId) {
+        this.id = uuid();
+        this.name = name;
+        this.description = description;
+        this.userId = userId
     }
 }
+
+module.exports = Todo;

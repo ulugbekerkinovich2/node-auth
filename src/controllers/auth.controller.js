@@ -3,7 +3,9 @@ const bcrypt = require("bcrypt");
 const User = require("../models/user.model");
 const path = require("path");
 const Joi = require("joi");
+const jwt = require("jsonwebtoken");
 const { v4: uuid } = require("uuid");
+const {createToken, checkToken} = require("../utils/jwt");
 const { error } = require("console");
 const usersDB = new Io(`${process.cwd()}/database/users.json`);
 
@@ -21,15 +23,18 @@ const login = async (req, res) => {
     if (error) return res.status(400).json({ message: error.message });
     const users = await usersDB.read();
     const findUser = users.find((user) => user.username === username);
-
+    console.log('ok');
     if (!findUser)
       return res
         .status(403)
         .json({ message: "Incorrect username or password" });
 
     const verify = await bcrypt.compare(password, findUser.password);
+    console.log(verify);
     if (!verify) return res.json({ message: "Incorrect username or password" });
-    res.json({ message: "You are successfully logged in", data: findUser });
+    console.log(findUser);
+    const token = createToken({ id: findUser.id });
+    res.json({ message: "You are successfully logged in", data: findUser, token: token });
   } catch (error) {
     // res.status(500).json({ message: "Internal Server error" });
     res.status(500).json({ message: error.message });
@@ -56,13 +61,13 @@ const register = async (req, res) => {
     const newUser = new User(fullname, username, hashedPass, photoName);
     users.push(newUser);
     await usersDB.write(users);
-    console.log(newUser);
 
-    res.json({ data: newUser });
+    const token = createToken({ id: newUser.id });
+    res.json({ data: newUser, token: token });
   } catch (error) {
     console.log(error);
-    // res.status(500).json({ message: "Internal Server error" });
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Internal Server error" });
+    // res.status(500).json({ message: error.message });
   }
 };
 
